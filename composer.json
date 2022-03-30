@@ -41,11 +41,6 @@
       "dev-develop": "1.0-dev"
     }
   },
-  "funding": [],
-  "config": {
-    "sort-packages": true
-  },
-  "prefer-stable": true,
   "minimum-stability": "dev",
   "scripts": {
     "php-cs-fixer": "php-cs-fixer fix --diff",
