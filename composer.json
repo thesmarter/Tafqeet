@@ -26,10 +26,11 @@
   "require": {},
   "autoload": {
     "psr-4": {
-      "thesmarter\\src\\Helper\\": "src/helper",
-      "thesmarter\\src\\Core\\": "src/core"
+      "thesmarter\\Tafqeet\\Helper\\": "src/helper",
+      "thesmarter\\Tafqeet\\Core\\": "src/core"
     }
   },
+  
   "autoload-dev": {
     "psr-4": {
       "thesmarter\\Test\\": "tests/"
