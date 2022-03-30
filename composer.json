@@ -1,0 +1,59 @@
+{
+  "name": "thesmarter/tafqeet",
+  "description": "convert numbers into arabic words",
+  "keywords": [
+    "numbers",
+    "arabic",
+    "words",
+    "tafqeet",
+    "تفقيط"
+  ],
+  "homepage": "https://github.com/thesmarter/tafqeet",
+  "support": {
+    "issues": "https://github.com/thesmarter/tafqeet/issues",
+    "source": "https://github.com/thesmarter/tafqeet"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Eltayeb Hassan",
+      "email": "Elteyab@smart.sd",
+      "homepage": "https://elteyab.sd",
+      "role": "Forked package creator | Developer"
+    }
+  ],
+  "minimum-stability": "alpha",
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "thesmarter\\Tafqeet\\Helper\\": "src/helper",
+      "thesmarter\\Tafqeet\\Core\\": "src/core"
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "PHPOpenSourceSaver\\JWTAuth\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "thesmarter\\Test\\": "tests/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-develop": "1.0-dev"
+    }
+  },
+  "funding": [],
+  "config": {
+    "sort-packages": true
+  },
+  "prefer-stable": true,
+  "minimum-stability": "dev",
+  "scripts": {
+    "php-cs-fixer": "php-cs-fixer fix --diff",
+    "test": "phpunit --colors=always",
+    "test:ci": "composer test -- --verbose --coverage-text --coverage-clover=coverage.xml"
+  }
+}
