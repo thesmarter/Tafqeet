@@ -11,24 +11,27 @@ class Tafqeet
     private const CONNECTION_TOOL = ' و';
 
     private const CURRENCIES = [
-        'sar' => [
-            'main1'  => 'ريال',
-            'main2'  => 'ريالاً',
-            'single' => 'هللة',
-            'multi'  => 'هللات',
-        ],
-        'sdg' => [
-            'main1'  => 'قرش',
-            'main2'  => 'قرشاً',
-            'single' => 'قرش',
-            'multi'  => 'قروش',
-        ],
-        'usd' => [
-            'main1'  => 'دولار',
-            'main2'  => 'دولاراً',
-            'single' => 'سنت',
-            'multi'  => 'سنت',
-        ],
+        // عربي
+        'sar' => ['main1' => 'ريال', 'main2' => 'ريالاً', 'single' => 'هللة', 'multi' => 'هللات'],
+        'sdg' => ['main1' => 'جنيه', 'main2' => 'جنيهًا', 'single' => 'قرش', 'multi' => 'قروش'],
+        'egp' => ['main1' => 'جنيه', 'main2' => 'جنيهًا', 'single' => 'قرش', 'multi' => 'قروش'],
+        'syp' => ['main1' => 'جنيه', 'main2' => 'جنيهًا', 'single' => 'قرش', 'multi' => 'قروش'],
+        'lbp' => ['main1' => 'جنيه', 'main2' => 'جنيهًا', 'single' => 'قرش', 'multi' => 'قروش'],
+        'iqd' => ['main1' => 'دينار', 'main2' => 'دينارًا', 'single' => 'درهم', 'multi' => 'دراهم'],
+        'jod' => ['main1' => 'دينار', 'main2' => 'دينارًا', 'single' => 'درهم', 'multi' => 'دراهم'],
+        'omr' => ['main1' => 'ريال', 'main2' => 'ريالًا', 'single' => 'درهم', 'multi' => 'دراهم'],
+        'qar' => ['main1' => 'ريال', 'main2' => 'ريالًا', 'single' => 'درهم', 'multi' => 'دراهم'],
+        'aed' => ['main1' => 'درهم', 'main2' => 'درهمًا', 'single' => 'فلس', 'multi' => 'فلوس'],
+        'kwd' => ['main1' => 'دينار', 'main2' => 'دينارًا', 'single' => 'درهم', 'multi' => 'دراهم'],
+        'bhd' => ['main1' => 'دينار', 'main2' => 'دينارًا', 'single' => 'درهم', 'multi' => 'دراهم'],
+        // غربي
+        'usd' => ['main1' => 'دولار', 'main2' => 'دولاراً', 'single' => 'سنت', 'multi' => 'سنت'],
+        'eur' => ['main1' => 'يورو', 'main2' => 'يوروًا', 'single' => 'سنت', 'multi' => 'سنت'],
+        'gbp' => ['main1' => 'جنيه إسترليني', 'main2' => 'جنيه إسترلينيًا', 'single' => 'بيني', 'multi' => 'بنسات'],
+        'cad' => ['main1' => 'دولار', 'main2' => 'دولارًا', 'single' => 'سنت', 'multi' => 'سنت'],
+        'aud' => ['main1' => 'دولار', 'main2' => 'دولارًا', 'single' => 'سنت', 'multi' => 'سنت'],
+        'jpy' => ['main1' => 'ين', 'main2' => 'ينًا', 'single' => '', 'multi' => ''],
+        'chf' => ['main1' => 'فرنك', 'main2' => 'فرنكًا', 'single' => 'رابم', 'multi' => 'رابم'],
     ];
 
     private const ONES = [
@@ -374,7 +377,9 @@ class Tafqeet
                 ? $currencyConfig['multi']
                 : $currencyConfig['single'];
 
-            $result .= self::CONNECTION_TOOL . $this->resultAfterComma . ' ' . $fractionalWord;
+            if ($fractionalWord !== '') {
+                $result .= self::CONNECTION_TOOL . $this->resultAfterComma . ' ' . $fractionalWord;
+            }
         }
 
         $result .= ' لاغير';

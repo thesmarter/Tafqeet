@@ -56,7 +56,37 @@ final class TafqeetTest extends TestCase
 
     public function testSdgCurrency(): void
     {
-        $this->assertSame('فقط خمسمائة قرش وخمسة وعشرون قرش لاغير', Tafqeet::arablic(500.25, 'sdg'));
+        $this->assertSame('فقط خمسمائة جنيه وخمسة وعشرون قرش لاغير', Tafqeet::arablic(500.25, 'sdg'));
+    }
+
+    public function testEgpcurrency(): void
+    {
+        $this->assertSame('فقط مائة جنيه وخمسون قرش لاغير', Tafqeet::arablic('100.50', 'egp'));
+    }
+
+    public function testIqdCurrency(): void
+    {
+        $this->assertSame('فقط ألف دينار لاغير', Tafqeet::arablic(1000, 'iqd'));
+    }
+
+    public function testAedCurrency(): void
+    {
+        $this->assertSame('فقط خمسون درهمًا لاغير', Tafqeet::arablic(50, 'aed'));
+    }
+
+    public function testEurCurrency(): void
+    {
+        $this->assertSame('فقط مائة يورو لاغير', Tafqeet::arablic(100, 'eur'));
+    }
+
+    public function testGbpCurrency(): void
+    {
+        $this->assertSame('فقط خمسون جنيه إسترلينيًا لاغير', Tafqeet::arablic(50, 'gbp'));
+    }
+
+    public function testJpyCurrency(): void
+    {
+        $this->assertSame('فقط ألف ين لاغير', Tafqeet::arablic(1000, 'jpy'));
     }
 
     public function testStringInput(): void
