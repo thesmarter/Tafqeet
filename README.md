@@ -1,4 +1,4 @@
-# Tafqeet [![Packagist Version][packagist-image]][packagist-url] [![PHP Version][php-image]][php-url] [![License][license-image]][license-url] [![Build][build-image]][build-url] [![Total Downloads][downloads-image]][downloads-url]
+# Tafqeet [![Packagist Version][packagist-image]][packagist-url] [![PHP 8.1+][php-image]][php-url] [![License][license-image]][license-url] [![CI][build-image]][build-url] [![Total Downloads][downloads-image]][downloads-url]
 
 > Convert numbers into Arabic words – a PHP library for transforming amounts into Arabic text
 
@@ -178,11 +178,11 @@ The library currently works for numbers up to **999999.99**.
 <!-- Badge Links / روابط الشارات -->
 [packagist-image]: https://img.shields.io/packagist/v/thesmarter/tafqeet.svg?style=flat-square
 [packagist-url]: https://packagist.org/packages/thesmarter/tafqeet
-[php-image]: https://img.shields.io/packagist/php-v/thesmarter/tafqeet.svg?style=flat-square
-[php-url]: https://packagist.org/packages/thesmarter/tafqeet
+[php-image]: https://img.shields.io/badge/PHP-8.1%2B-blue?style=flat-square
+[php-url]: https://www.php.net/manual/en/intro.php
 [license-image]: https://img.shields.io/packagist/l/thesmarter/tafqeet.svg?style=flat-square
 [license-url]: https://packagist.org/packages/thesmarter/tafqeet
-[build-image]: https://img.shields.io/github/actions/workflow/status/thesmarter/tafqeet/ci.yml?style=flat-square
+[build-image]: https://img.shields.io/github/actions/workflow/status/thesmarter/tafqeet/ci.yml?branch=main&style=flat-square
 [build-url]: https://github.com/thesmarter/tafqeet/actions
 [downloads-image]: https://img.shields.io/packagist/dt/thesmarter/tafqeet.svg?style=flat-square
 [downloads-url]: https://packagist.org/packages/thesmarter/tafqeet
