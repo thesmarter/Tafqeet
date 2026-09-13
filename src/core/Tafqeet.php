@@ -1,143 +1,384 @@
 <?php
 
+declare(strict_types=1);
+
 namespace thesmarter\Tafqeet\Core;
 
-    use thesmarter\Tafqeet\Helper\App;
-    use thesmarter\Tafqeet\Helper\Calculators;
-    use thesmarter\Tafqeet\Helper\Handler;
-    use thesmarter\Tafqeet\Helper\Validation;
+use thesmarter\Tafqeet\Exception\TafqeetException;
 
-    class Tafqeet
+class Tafqeet
+{
+    private const CONNECTION_TOOL = ' و';
+
+    private const CURRENCIES = [
+        'sar' => [
+            'main1'  => 'ريال',
+            'main2'  => 'ريالاً',
+            'single' => 'هللة',
+            'multi'  => 'هللات',
+        ],
+        'sdg' => [
+            'main1'  => 'قرش',
+            'main2'  => 'قرشاً',
+            'single' => 'قرش',
+            'multi'  => 'قروش',
+        ],
+        'usd' => [
+            'main1'  => 'دولار',
+            'main2'  => 'دولاراً',
+            'single' => 'سنت',
+            'multi'  => 'سنت',
+        ],
+    ];
+
+    private const ONES = [
+        0 => 'صفر', 1 => 'واحد', 2 => 'اثنان', 3 => 'ثلاثة', 4 => 'أربعة',
+        5 => 'خمسة', 6 => 'ستة', 7 => 'سبعة', 8 => 'ثمانية', 9 => 'تسعة',
+        10 => 'عشرة', 11 => 'أحد عشر', 12 => 'اثنى عشر',
+    ];
+
+    private const TENS = [
+        1 => 'عشر', 2 => 'عشرون', 3 => 'ثلاثون', 4 => 'أربعون',
+        5 => 'خمسون', 6 => 'ستون', 7 => 'سبعون', 8 => 'ثمانون', 9 => 'تسعون',
+    ];
+
+    private const HUNDREDS = [
+        0 => 'صفر', 1 => 'مائة', 2 => 'مئتان', 3 => 'ثلاثمائة', 4 => 'أربعمائة',
+        5 => 'خمسمائة', 6 => 'ستمائة', 7 => 'سبعمائة', 8 => 'ثمانمائة', 9 => 'تسعمائة',
+    ];
+
+    private const SCALE = [
+        'thousands' => [1 => 'ألف', 2 => 'ألفان', 39 => 'آلاف', 1199 => 'ألفًا'],
+        'millions'  => [1 => 'مليون', 2 => 'مليونان', 39 => 'ملايين', 1199 => 'مليونًا'],
+        'billions'  => [1 => 'مليار', 2 => 'ملياران', 39 => 'مليارات', 1199 => 'مليارًا'],
+        'trillions' => [1 => 'تريليون', 2 => 'تريليونان', 39 => 'تريليونات', 1199 => 'تريليونًا'],
+    ];
+
+    private const OTHERS = [
+        1 => 'احد', 2 => 'اثنا', 4 => 'اربع',
+    ];
+
+    private string $amount;
+    private array $beforeCommaDigits = [];
+    private array $afterCommaDigits = [];
+    private int $beforeCommaLength = 0;
+    private int $afterCommaLength = 0;
+    private string $afterCommaSum = '';
+    private bool $isMain1Currency = true;
+    private string $resultBeforeComma = '';
+    private string $resultAfterComma = '';
+
+    public function __construct(int|float|string $amount)
     {
-        use Calculators;
-        use Handler;
-        use Validation;
-        use App;
-
-        public $config = [
-            'connection_tool' => ' و',
-            'default_currency' => 'sar',
-            'starter' => 'فقط',
-            'end' => 'لاغير',
-            'currencies' => [
-                'sar' => [
-                    'main1' => 'ريال',
-                    'main2' => 'ريالاً',
-                    'single' => 'هللة',
-                    'multi' => 'هللات',
-                ],
-
-                'sdg' => [
-                    'main1' => 'قرش',
-                    'main2' => 'قرشاً',
-                    'single' => 'قرش',
-                    'multi' => 'قروش',
-                ],
-
-                'usd' => [
-                    'main1' => 'دولار',
-                    'main2' => 'دولاراً',
-                    'single' => 'سنت',
-                    'multi' => 'سنت',
-                ],
-            ],
-        ];
-        // parsed number
-        public $after_comma_sum;
-
-        // array of numbers after split process
-        private $parsed_number;
-
-        /*
-         * all number array
-         * all array count
-         * */
-        private $parsed_number_array = [];
-        private $all_numbers_len;
-
-        /*
-         * before comma number array
-         * before comma array count
-         * */
-        private $all_numbers_array;
-        private $before_comma_len;
-
-        /*
-         * after comma number array
-         * after comma array count
-         * */
-        private $before_comma_array;
-        private $after_comma_len;
-        private $after_comma_array;
-
-        // result before and after comma
-        private $result_before_comma;
-        private $result_after_comma;
-
-        private $is_main1_currency = true;
-
-        /**
-         * @param int    $amount
-         * @param string $currency
-         *
-         * @return mixed
-         */
-        public static function arablic($amount = 0, $currency = 'sar')
-        {
-            if(!is_numeric($amount)) return "";
-
-            return (new self())->setAmount($amount)->initValidation()->prepare()->run()->result($currency);
+        if (!is_numeric($amount)) {
+            throw new TafqeetException('The provided amount is not a valid number.');
         }
 
-        /**
-         * @param string $currency
-         *
-         * @return mixed
-         */
-        public function result($currency = 'sar')
-        {
-            $result = $this->config['starter'].' ';
+        $this->amount = (string) $amount;
+    }
 
-            if ($this->is_main1_currency) {
-                $result .= $this->result_before_comma.' '.$this->config['currencies'][$currency]['main1'];
-            } else {
-                $result .= $this->result_before_comma.' '.$this->config['currencies'][$currency]['main2'];
+    public static function arablic(int|float|string $amount = 0, string $currency = 'sar'): string
+    {
+        return (new self($amount))->toWords($currency);
+    }
+
+    public function toWords(string $currency = 'sar'): string
+    {
+        $this->parse();
+        $this->compute();
+
+        return $this->buildResult($currency);
+    }
+
+    private function parse(): void
+    {
+        $parts = explode('.', $this->amount);
+        $this->beforeCommaDigits = array_map('intval', str_split($parts[0]));
+        $this->beforeCommaLength = count($this->beforeCommaDigits);
+
+        if (count($parts) >= 2) {
+            $after = array_map('intval', str_split($parts[1]));
+            if (count($after) >= 3) {
+                $after = [$after[0], $after[1]];
             }
-            if ($this->after_comma_len >= 1) {
-                if (in_array($this->after_comma_sum, [
-                    3, 4, 5, 6, 7, 8, 9, 10,
-                ])) {
-                    $result .= $this->config['connection_tool'].$this->result_after_comma.' '.
-                        $this->config['currencies'][$currency]['multi'];
-                } else {
-                    $result .= $this->config['connection_tool'].$this->result_after_comma.' '.
-                        $this->config['currencies'][$currency]['single'];
-                }
-            }
-
-            $result .= ' '.$this->config['end'];
-
-            return str_replace('  ', ' ', $result);
-        }
-
-        /**
-         * @return $this
-         */
-        public function run()
-        {
-            $this->result_before_comma = $this->runBeforeComma();
-            $this->result_after_comma = $this->runAfterComma();
-
-            return $this;
-        }
-
-        /**
-         * @return $this
-         */
-        public function prepare()
-        {
-            $this->split_parsed_number_to_two_number_depend_on_comma()->split_numbers_before_comma_to_array()->split_numbers_after_comma_to_array();
-
-            return $this;
+            $this->afterCommaDigits = $after;
+            $this->afterCommaLength = count($this->afterCommaDigits);
+            $this->afterCommaSum = implode('', $this->afterCommaDigits);
+        } else {
+            $this->afterCommaDigits = [];
+            $this->afterCommaLength = 0;
+            $this->afterCommaSum = '';
         }
     }
+
+    private function compute(): void
+    {
+        $this->resultBeforeComma = $this->runBeforeComma();
+        $this->resultAfterComma = $this->runAfterComma();
+    }
+
+    private function runBeforeComma(): string
+    {
+        $class = $this->detectClass($this->beforeCommaLength);
+        if ($class === null) {
+            return 'عفوا هذا الرقم خارج نطاقنا حاليا حاول لاحقاً';
+        }
+
+        return $this->computeClass('Class' . $class, $this->beforeCommaDigits, $this->beforeCommaLength);
+    }
+
+    private function runAfterComma(): string
+    {
+        if ($this->afterCommaLength === 0) {
+            return '';
+        }
+
+        $class = $this->detectClass($this->afterCommaLength);
+        if ($class === null) {
+            return 'عفوا هذا الرقم خارج نطاقنا حاليا حاول لاحقاً';
+        }
+
+        return $this->computeClass('Class' . $class, $this->afterCommaDigits, $this->afterCommaLength);
+    }
+
+    private function detectClass(int $length): ?string
+    {
+        return match ($length) {
+            1 => 'A',
+            2 => 'B',
+            3 => 'C',
+            4 => 'D',
+            5 => 'E',
+            6 => 'F',
+            default => null,
+        };
+    }
+
+    private function computeClass(string $methodName, array $digits, int $length): string
+    {
+        return match ($methodName) {
+            'ClassA' => $this->classA($digits),
+            'ClassB' => $this->classB($digits),
+            'ClassC' => $this->classC($digits),
+            'ClassD' => $this->classD($digits),
+            'ClassE' => $this->classE($digits),
+            'ClassF' => $this->classF($digits),
+            default => '',
+        };
+    }
+
+    private function classA(array $arr): string
+    {
+        return self::ONES[$arr[0]] ?? '';
+    }
+
+    private function classB(array $arr): string
+    {
+        if ($this->beforeCommaLength >= 2) {
+            $tenIdx = $this->beforeCommaLength - 2;
+            $singleIdx = $this->beforeCommaLength - 1;
+            $detected = [$this->beforeCommaDigits[$tenIdx], $this->beforeCommaDigits[$singleIdx]];
+            if ($arr === $detected) {
+                if ($arr[0] === 0 && $arr[1] >= 1 && $arr[1] <= 10) {
+                    $this->isMain1Currency = true;
+                } elseif ($arr[0] >= 1 && $arr[1] >= 1 && $arr[1] <= 9) {
+                    $this->isMain1Currency = false;
+                } elseif ($arr[0] >= 2) {
+                    $this->isMain1Currency = false;
+                }
+            }
+        }
+
+        if ($arr[0] === 0 && $arr[1] === 0) {
+            return '';
+        }
+
+        if ($arr[0] === 0) {
+            return self::ONES[$arr[1]];
+        }
+
+        if ($arr[0] === 1 && $arr[1] === 1) {
+            return self::ONES[11];
+        }
+
+        if ($arr[0] === 1 && $arr[1] === 0) {
+            return self::ONES[10];
+        }
+
+        if ($arr[1] === 0) {
+            return self::TENS[$arr[0]];
+        }
+
+        if ($arr[0] > 1) {
+            return self::ONES[$arr[1]] . self::CONNECTION_TOOL . self::TENS[$arr[0]];
+        }
+
+        if (in_array($arr[1], [1, 2], true)) {
+            return self::OTHERS[$arr[1]] . ' ' . self::TENS[$arr[0]];
+        }
+
+        return self::ONES[$arr[1]] . ' ' . self::TENS[$arr[0]];
+    }
+
+    private function classC(array $arr): string
+    {
+        if ($arr[0] === 0 && $arr[1] === 0 && $arr[2] === 0) {
+            return '';
+        }
+
+        if ($arr[0] === 0 && $arr[1] === 0) {
+            return self::ONES[$arr[2]];
+        }
+
+        if ($arr[0] === 0) {
+            return $this->classB([$arr[1], $arr[2]]);
+        }
+
+        if ($arr[2] === 0 && $arr[1] === 0) {
+            return self::HUNDREDS[$arr[0]];
+        }
+
+        if ($arr[1] !== 0) {
+            return self::HUNDREDS[$arr[0]] . self::CONNECTION_TOOL . $this->classB([$arr[1], $arr[2]]);
+        }
+
+        return self::HUNDREDS[$arr[0]] . self::CONNECTION_TOOL . self::ONES[$arr[2]];
+    }
+
+    private function classD(array $arr): string
+    {
+        $classC = [$arr[1], $arr[2], $arr[3]];
+
+        if ($arr[0] <= 2) {
+            $thousands = self::SCALE['thousands'][$arr[0]];
+        } else {
+            $thousands = self::ONES[$arr[0]] . ' ' . self::SCALE['thousands'][39];
+        }
+
+        if ($arr[1] === 0 && $arr[2] === 0 && $arr[3] === 0) {
+            return $thousands;
+        }
+
+        return $thousands . self::CONNECTION_TOOL . $this->classC($classC);
+    }
+
+    private function classE(array $arr): string
+    {
+        $classC = [$arr[2], $arr[3], $arr[4]];
+
+        if ($arr[0] !== 0) {
+            $conn = ' ';
+
+            if ($arr[1] >= 2 && $arr[0] > 1) {
+                $conn = self::CONNECTION_TOOL;
+            }
+
+            if (in_array($arr[1], [1, 2], true)) {
+                $thousands = self::OTHERS[$arr[1]] . $conn . self::TENS[$arr[0]];
+            } else {
+                $thousands = self::ONES[$arr[1]] . $conn . self::TENS[$arr[0]];
+            }
+
+            if ($arr[1] === 0) {
+                if ($arr[0] === 1) {
+                    $thousands = self::ONES[10];
+                    $thousands .= ' ' . self::SCALE['thousands'][39];
+                } else {
+                    $thousands = self::TENS[$arr[0]];
+                    $thousands .= ' ' . self::SCALE['thousands'][1];
+                }
+            } else {
+                if ($arr[2] === 0 && $arr[3] === 0 && $arr[4] === 0) {
+                    $thousands .= ' ' . self::SCALE['thousands'][1];
+                } else {
+                    $thousands .= ' ' . self::SCALE['thousands'][1199];
+                }
+            }
+        } else {
+            if (in_array($arr[1], [1, 2], true)) {
+                $thousands = self::OTHERS[$arr[1]] . ' ';
+            } else {
+                $thousands = self::ONES[$arr[1]] . ' ';
+            }
+
+            if ($arr[1] === 0) {
+                $thousands = self::TENS[$arr[2]];
+            }
+
+            $thousands .= ' ' . self::SCALE['thousands'][39];
+        }
+
+        if ($this->classC($classC) !== '') {
+            return $thousands . self::CONNECTION_TOOL . $this->classC($classC);
+        }
+
+        return $thousands;
+    }
+
+    private function classF(array $arr): string
+    {
+        $classC = [$arr[3], $arr[4], $arr[5]];
+
+        if ($arr[0] !== 0) {
+            if ($arr[1] === 0 && $arr[2] === 0) {
+                $thousands = self::HUNDREDS[$arr[0]] . ' ' . self::SCALE['thousands'][1];
+            } else {
+                if ($arr[1] === 0) {
+                    $thousands = self::HUNDREDS[$arr[0]] . self::CONNECTION_TOOL
+                        . self::ONES[$arr[2]] . ' ' . self::SCALE['thousands'][1];
+                } elseif ($arr[2] === 0) {
+                    if ($arr[3] === 0 && $arr[4] === 0 && $arr[5] === 0) {
+                        $thousands = self::HUNDREDS[$arr[0]] . self::CONNECTION_TOOL
+                            . self::TENS[$arr[1]] . ' ' . self::SCALE['thousands'][1];
+                    } else {
+                        $thousands = self::HUNDREDS[$arr[0]] . self::CONNECTION_TOOL
+                            . self::TENS[$arr[1]] . ' ' . self::SCALE['thousands'][1199];
+                    }
+                } else {
+                    if ($arr[1] === 0 && $arr[2] >= 1 && $arr[1] <= 10) {
+                        $thousandsLang = self::SCALE['thousands'][1];
+                    } elseif ($arr[1] >= 1 && $arr[2] >= 1 && $arr[1] <= 9) {
+                        $thousandsLang = self::SCALE['thousands'][1199];
+                    } else {
+                        $thousandsLang = self::SCALE['thousands'][1199];
+                    }
+
+                    $thousands = $this->classC([$arr[0], $arr[1], $arr[2]], 3) . ' ' . $thousandsLang;
+                }
+            }
+        } else {
+            return $this->classE([$arr[1], $arr[2], $arr[3], $arr[4], $arr[5]]);
+        }
+
+        if ($this->classC($classC) !== '') {
+            return $thousands . self::CONNECTION_TOOL . $this->classC($classC);
+        }
+
+        return $thousands;
+    }
+
+    private function buildResult(string $currency): string
+    {
+        $currencyConfig = self::CURRENCIES[$currency] ?? self::CURRENCIES['sar'];
+
+        $result = 'فقط ';
+
+        if ($this->isMain1Currency) {
+            $result .= $this->resultBeforeComma . ' ' . $currencyConfig['main1'];
+        } else {
+            $result .= $this->resultBeforeComma . ' ' . $currencyConfig['main2'];
+        }
+
+        if ($this->afterCommaLength >= 1) {
+            $fractionalWord = in_array((int) $this->afterCommaSum, [3, 4, 5, 6, 7, 8, 9, 10], false)
+                ? $currencyConfig['multi']
+                : $currencyConfig['single'];
+
+            $result .= self::CONNECTION_TOOL . $this->resultAfterComma . ' ' . $fractionalWord;
+        }
+
+        $result .= ' لاغير';
+
+        return preg_replace('/\s{2,}/', ' ', $result);
+    }
+}
